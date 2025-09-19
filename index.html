@@ -10,11 +10,51 @@
 <body>
     <div class="container">
         <header class="header">
-            <h1><i class="fas fa-tasks"></i> Project Board</h1>
-            <button class="btn btn-primary" id="addTaskBtn">
-                <i class="fas fa-plus"></i> Add Task
-            </button>
+            <div class="header-left">
+                <h1><i class="fas fa-tasks"></i> Project Board</h1>
+                <div class="project-info">
+                    <span class="project-key">PROJ</span>
+                    <span class="project-name">Sample Project</span>
+                </div>
+            </div>
+            <div class="header-actions">
+                <button class="btn btn-secondary" id="filterBtn">
+                    <i class="fas fa-filter"></i> Filter
+                </button>
+                <button class="btn btn-primary" id="addTaskBtn">
+                    <i class="fas fa-plus"></i> Add Task
+                </button>
+            </div>
         </header>
+
+        <div class="filters" id="filtersPanel" style="display: none;">
+            <div class="filter-group">
+                <label>Assignee:</label>
+                <select id="assigneeFilter">
+                    <option value="">All Assignees</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label>Priority:</label>
+                <select id="priorityFilter">
+                    <option value="">All Priorities</option>
+                    <option value="low">Low</option>
+                    <option value="medium">Medium</option>
+                    <option value="high">High</option>
+                    <option value="urgent">Urgent</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label>Due Date:</label>
+                <select id="dueDateFilter">
+                    <option value="">All Tasks</option>
+                    <option value="overdue">Overdue</option>
+                    <option value="today">Due Today</option>
+                    <option value="week">Due This Week</option>
+                </select>
+            </div>
+            <button class="btn btn-secondary" id="clearFiltersBtn">Clear Filters</button>
+        </div>
 
         <div class="board">
             <div class="column" data-status="todo">
@@ -64,7 +104,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h2 id="modalTitle">Add New Task</h2>
-                <span class="close">&times;</span>
+                <span class="close" id="taskModalClose">&times;</span>
             </div>
             <form id="taskForm">
                 <div class="form-group">
@@ -93,15 +133,40 @@
                         <input type="text" id="taskAssignee" name="assignee" placeholder="Enter name">
                     </div>
                 </div>
-                
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="taskStatus">Status</label>
+                        <select id="taskStatus" name="status">
+                            <option value="todo" selected>To Do</option>
+                            <option value="in-progress">In Progress</option>
+                            <option value="review">Code Review</option>
+                            <option value="done">Done</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="taskDueDate">Due Date</label>
+                        <input type="date" id="taskDueDate" name="dueDate">
+                    </div>
+                </div>
+
                 <div class="form-group">
-                    <label for="taskStatus">Status</label>
-                    <select id="taskStatus" name="status">
-                        <option value="todo" selected>To Do</option>
-                        <option value="in-progress">In Progress</option>
-                        <option value="review">Code Review</option>
-                        <option value="done">Done</option>
+                    <label for="taskStoryPoints">Story Points</label>
+                    <select id="taskStoryPoints" name="storyPoints">
+                        <option value="">None</option>
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="5">5</option>
+                        <option value="8">8</option>
+                        <option value="13">13</option>
                     </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="taskLabels">Labels (comma-separated)</label>
+                    <input type="text" id="taskLabels" name="labels" placeholder="e.g., frontend, backend, bug">
                 </div>
                 
                 <div class="modal-actions">
@@ -109,6 +174,106 @@
                     <button type="submit" class="btn btn-primary" id="saveBtn">Save Task</button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <!-- Task Detail Modal -->
+    <div class="modal task-detail-modal" id="taskDetailModal">
+        <div class="modal-content task-detail-content">
+            <div class="modal-header">
+                <div class="task-detail-header">
+                    <div class="task-key" id="detailTaskKey">PROJ-1</div>
+                    <h2 id="detailTaskTitle">Task Title</h2>
+                </div>
+                <div class="header-actions">
+                    <button class="btn btn-secondary btn-sm" id="editTaskBtn">
+                        <i class="fas fa-edit"></i> Edit
+                    </button>
+                    <span class="close" id="taskDetailClose">&times;</span>
+                </div>
+            </div>
+            
+            <div class="task-detail-body">
+                <div class="task-detail-main">
+                    <div class="detail-section">
+                        <h4>Description</h4>
+                        <div id="detailDescription" class="description-content">No description provided.</div>
+                    </div>
+
+                    <div class="detail-section">
+                        <div class="attachments-header">
+                            <h4>Attachments</h4>
+                            <button class="btn btn-secondary btn-sm" id="addAttachmentBtn">
+                                <i class="fas fa-paperclip"></i> Add
+                            </button>
+                            <input type="file" id="attachmentInput" accept="image/*" style="display: none;" multiple>
+                        </div>
+                        <div id="attachmentsList" class="attachments-list">
+                            <!-- Attachments will be displayed here -->
+                        </div>
+                    </div>
+
+                    <div class="detail-section">
+                        <h4>Activity</h4>
+                        <div class="comment-form">
+                            <textarea id="commentInput" placeholder="Add a comment..." rows="3"></textarea>
+                            <button class="btn btn-primary btn-sm" id="addCommentBtn">Comment</button>
+                        </div>
+                        <div id="commentsList" class="comments-list">
+                            <!-- Comments will be displayed here -->
+                        </div>
+                    </div>
+                </div>
+
+                <div class="task-detail-sidebar">
+                    <div class="detail-field">
+                        <label>Status</label>
+                        <select id="detailStatus" class="status-select">
+                            <option value="todo">To Do</option>
+                            <option value="in-progress">In Progress</option>
+                            <option value="review">Code Review</option>
+                            <option value="done">Done</option>
+                        </select>
+                    </div>
+
+                    <div class="detail-field">
+                        <label>Assignee</label>
+                        <div id="detailAssignee">Unassigned</div>
+                    </div>
+
+                    <div class="detail-field">
+                        <label>Priority</label>
+                        <div id="detailPriority" class="priority-badge">Medium</div>
+                    </div>
+
+                    <div class="detail-field">
+                        <label>Due Date</label>
+                        <div id="detailDueDate" class="due-date">Not set</div>
+                    </div>
+
+                    <div class="detail-field">
+                        <label>Story Points</label>
+                        <div id="detailStoryPoints">Not set</div>
+                    </div>
+
+                    <div class="detail-field">
+                        <label>Labels</label>
+                        <div id="detailLabels" class="labels-container">
+                            <!-- Labels will be displayed here -->
+                        </div>
+                    </div>
+
+                    <div class="detail-field">
+                        <label>Created</label>
+                        <div id="detailCreated">-</div>
+                    </div>
+
+                    <div class="detail-field">
+                        <label>Updated</label>
+                        <div id="detailUpdated">-</div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
